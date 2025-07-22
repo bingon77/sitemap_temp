@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>행 기준 사이트맵</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    .sitemap-container {
+      display: flex;
+      flex-direction: row;
+      gap: 40px;
+      padding: 20px;
+      border-top: 1px solid #ccc;
+    }
+
+    .sitemap-section {
+      min-width: 180px;
+      padding-right: 20px;
+      border-right: 1px solid #ccc;
+    }
+
+    .sitemap-section:last-child {
+      border-right: none;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: #222;
+    }
+
+    .submenu-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    .submenu-item {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    .submenu-item ul {
+      margin-top: 4px;
+      padding-left: 16px;
+      border-left: 1px dashed #ccc;
+    }
+
+    .submenu-item a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .submenu-item a:hover {
+      text-decoration: underline;
+    }
+
+    .external-icon {
+      font-size: 12px;
+      margin-left: 4px;
+    }
+
+    .search-box {
+      margin: 20px;
+    }
+
+    .search-results {
+      margin: 0 20px 20px;
+      list-style: none;
+      padding: 0;
+      border: 1px solid #ccc;
+      max-width: 400px;
+      position: relative;
+    }
+
+    .search-results li {
+      padding: 6px 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .search-results li:hover {
+      background-color: #f0f0f0;
+    }
+
+    .search-buttons {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    .search-buttons button {
+      padding: 6px 10px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+
+    #clearBtn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      padding: 2px 6px;
+      font-size: 12px;
+      display: none;
+      background: #eee;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>사이트맵 자동 생성 (가로 행 형태)</h2>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="메뉴명 검색..." style="width: 300px; padding: 6px;">
+    <span class="search-buttons">
+      <button onclick="triggerSearch()">🔍 검색</button>
+    </span>
+  </div>
+  <div style="position: relative; max-width: 400px; margin: 0 20px 20px;">
+    <button id="clearBtn" onclick="clearSearch()">✖</button>
+    <ul class="search-results" id="searchResults"></ul>
+  </div>
+
+  <div class="sitemap-container" id="sitemap"></div>
+
+  <script>
+    var rawData = {
+      result: [
+        {menu1: "제품", menu2: "갤럭시", menu3: ""},
+        {menu1: "제품", menu2: "스마트폰", menu3: ""},
+        {menu1: "제품", menu2: "태블릿", menu3: ""},
+        {menu1: "제품", menu2: "모니터", menu3: ""},
+        {menu1: "제품", menu2: "TV", menu3: null},
+        {menu1: "이벤트/선물하기", menu2: "선물하기", menu3: null},
+        {menu1: "이벤트/선물하기", menu2: "공동구매", menu3: null},
+        {menu1: "이벤트/선물하기", menu2: "웨딩/신혼", menu3: null},
+        {menu1: "이벤트/선물하기", menu2: "MD 초이스 샵", menu3: "소품"},
+        {menu1: "이벤트/선물하기", menu2: "MD 초이스 샵", menu3: "술"},
+        {menu1: "고객서비스", menu2: "FAQ", menu3: ""},
+        {menu1: "고객서비스", menu2: "서비스센터 찾기", menu3: ""},
+        {menu1: "고객서비스", menu2: "다운로드", menu3: ""},
+        {menu1: "고객서비스", menu2: "매장 찾기", menu3: ""},
+        {menu1: "지속가능경영", menu2: "환경", menu3: ""},
+        {menu1: "지속가능경영", menu2: "접근성", menu3: ""},
+        {menu1: "지속가능경영", menu2: "사회공헌", menu3: ""},
+        {menu1: "지속가능경영", menu2: "보안", menu3: ""},
+        {menu1: "윤리&준법경영", menu2: "경영원칙", menu3: ""},
+        {menu1: "윤리&준법경영", menu2: "법무지원", menu3: ""},
+        {menu1: "윤리&준법경영", menu2: "부정제보", menu3: ""}
+      ]
+    };
+
+    function transformToTree(data) {
+      var map = {};
+      data.result.forEach(function(item) {
+        var m1 = item.menu1;
+        var m2 = item.menu2;
+        var m3 = item.menu3;
+
+        if (!map[m1]) map[m1] = {};
+        if (!map[m1][m2]) map[m1][m2] = [];
+
+        if (m3 && m3.trim() !== '') {
+          map[m1][m2].push({ name: m3 });
+        }
+      });
+
+      var result = [];
+      for (var m1 in map) {
+        var section = { name: m1, children: [] };
+        for (var m2 in map[m1]) {
+          var submenu = { name: m2 };
+          if (map[m1][m2].length > 0) submenu.children = map[m1][m2];
+          section.children.push(submenu);
+        }
+        result.push(section);
+      }
+      return result;
+    }
+
+    function renderMenuItems(items, parentPath) {
+      var ul = document.createElement('ul');
+      ul.className = 'submenu-list';
+
+      for (var i = 0; i < items.length; i++) {
+        var li = document.createElement('li');
+        li.className = 'submenu-item';
+
+        var currentPath = parentPath ? parentPath + '/' + encodeURIComponent(items[i].name) : encodeURIComponent(items[i].name);
+        var hasChildren = items[i].children && items[i].children.length > 0;
+
+        if (hasChildren) {
+          li.textContent = items[i].name;
+        } else {
+          var a = document.createElement('a');
+          a.href = currentPath;
+          a.innerHTML = items[i].name + '<span class="external-icon">↗</span>';
+          li.appendChild(a);
+        }
+
+        if (hasChildren) {
+          var childUl = renderMenuItems(items[i].children, currentPath);
+          li.appendChild(childUl);
+        }
+
+        ul.appendChild(li);
+      }
+
+      return ul;
+    }
+
+    function createSitemapSection(data) {
+      var section = document.createElement('div');
+      section.className = 'sitemap-section';
+
+      var title = document.createElement('div');
+      title.className = 'section-title';
+      title.textContent = data.name;
+      section.appendChild(title);
+
+      var menuList = renderMenuItems(data.children, encodeURIComponent(data.name));
+      section.appendChild(menuList);
+
+      return section;
+    }
+
+    var sitemapContainer = document.getElementById('sitemap');
+    var menuData = transformToTree(rawData);
+    for (var i = 0; i < menuData.length; i++) {
+      var section = createSitemapSection(menuData[i]);
+      sitemapContainer.appendChild(section);
+    }
+
+    var searchInput = document.getElementById('searchInput');
+    var searchResults = document.getElementById('searchResults');
+    var clearBtn = document.getElementById('clearBtn');
+
+    function triggerSearch() {
+      var keyword = searchInput.value.trim();
+      searchResults.innerHTML = '';
+
+      if (keyword.length === 0) {
+        clearBtn.style.display = 'none';
+        return;
+      }
+
+      var found = false;
+      rawData.result.forEach(function(item) {
+        var combined = item.menu1 + ' > ' + item.menu2 + (item.menu3 ? ' > ' + item.menu3 : '');
+        var lower = combined.toLowerCase();
+
+        if (lower.includes(keyword.toLowerCase())) {
+          found = true;
+          var li = document.createElement('li');
+          li.textContent = combined;
+
+          var path = encodeURIComponent(item.menu1);
+          if (item.menu2) path += '/' + encodeURIComponent(item.menu2);
+          if (item.menu3) path += '/' + encodeURIComponent(item.menu3);
+
+          li.addEventListener('click', function() {
+            location.href = path;
+          });
+
+          searchResults.appendChild(li);
+        }
+      });
+
+      clearBtn.style.display = found ? 'block' : 'none';
+    }
+
+    function clearSearch() {
+      searchResults.innerHTML = '';
+      clearBtn.style.display = 'none';
+    }
+
+    searchInput.addEventListener('input', triggerSearch);
+  </script>
+</body>
+</html>
+
